@@ -1,0 +1,28 @@
+name: Solicitar recurso
+description: Proponha uma melhoria para o projeto
+title: "[Recurso]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Solução proposta
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+  - type: checkboxes
+    id: legal
+    attributes:
+      label: Confirmações
+      options:
+        - label: A proposta não depende de burlar DRM, autenticação ou bloqueios regionais.
+          required: true

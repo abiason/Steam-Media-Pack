@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=YouTube TV
+Comment=YouTube TV para Steam Gaming Mode
+Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack-11/launchers/youtube-tv.sh
+Icon=steam-media-youtube-tv
+Terminal=false
+Categories=AudioVideo;Network;

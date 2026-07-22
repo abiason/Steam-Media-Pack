@@ -1,0 +1,53 @@
+name: Relatar erro
+description: Informe um problema reproduzível no Steam Media Pack
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Remova credenciais, cookies, tokens e dados pessoais antes de enviar logs.
+  - type: input
+    id: distro
+    attributes:
+      label: Distribuição e versão
+    validations:
+      required: true
+  - type: input
+    id: desktop
+    attributes:
+      label: Ambiente gráfico e sessão
+      description: Exemplo: KDE Plasma 6, Wayland/XWayland
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Modo
+      options:
+        - Desktop Mode
+        - Gaming Mode
+        - Ambos
+    validations:
+      required: true
+  - type: input
+    id: service
+    attributes:
+      label: Serviço afetado
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs e diagnóstico sanitizados

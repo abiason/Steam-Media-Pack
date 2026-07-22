@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Prime Video
+Comment=Prime Video para Steam Gaming Mode
+Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack-11/launchers/prime-video.sh
+Icon=steam-media-prime-video
+Terminal=false
+Categories=AudioVideo;Network;
