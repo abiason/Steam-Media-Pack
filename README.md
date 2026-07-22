@@ -1,4 +1,4 @@
-# Steam Media Pack 11.0
+# Steam Media Pack
 
 Transforme a biblioteca da Steam em uma central de mídia no Linux, com atalhos para serviços de streaming executados pelo navegador em modo de tela cheia.
 
