@@ -54,13 +54,13 @@ chmod +x launchers/*.sh tools/*.sh tools/*.py
 O conteúdo principal será instalado em:
 
 ```text
-~/.local/share/steam-media-pack-11
+~/.local/share/steam-media-pack
 ```
 
 As configurações serão gravadas em:
 
 ```text
-~/.config/steam-media-pack-11
+~/.config/steam-media-pack
 ```
 
 ### Instalar automaticamente os atalhos na Steam
@@ -79,7 +79,7 @@ O instalador adiciona somente os serviços ausentes e preserva os atalhos não S
 ## Alterar o modo de abertura
 
 ```bash
-~/.local/share/steam-media-pack-11/selecionar-modo.sh
+~/.local/share/steam-media-pack/selecionar-modo.sh
 ```
 
 Modos disponíveis:
@@ -132,7 +132,7 @@ A desinstalação remove os launchers, arquivos `.desktop`, ícones e configura�
 ## Estrutura do projeto
 
 ```text
-Steam-Media-Pack-11.0/
+Steam-Media-Pack/
 ├── .github/
 ├── desktop/
 ├── docs/
