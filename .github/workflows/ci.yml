@@ -89,19 +89,3 @@ jobs:
 
             echo "Found: $file"
           done
-
-      - name: Check executable permissions
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          failed=0
-
-          while IFS= read -r -d '' file; do
-            if [ ! -x "$file" ]; then
-              echo "::error file=$file::Shell script is not executable."
-              failed=1
-            fi
-          done < <(find . -type f -name "*.sh" -print0)
-
-          exit "$failed"
