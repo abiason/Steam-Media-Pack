@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import importlib.util
 
-module_path = Path(__file__).resolve().parent / "instalar-atalhos-steam.py"
+module_path = Path(__file__).resolve().parent / "update-steam-arts.py"
 spec = importlib.util.spec_from_file_location("smp11_installer", module_path)
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
