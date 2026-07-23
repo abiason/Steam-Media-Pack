@@ -231,7 +231,7 @@ def main():
     _, userdir = choose_user(users)
     config = userdir/"config"
     vdf = config/"shortcuts.vdf"
-    backup = config/"shortcuts.vdf.steam-media-pack-11.backup"
+    backup = config/"shortcuts.vdf.steam-media-pack.backup"
 
     if vdf.exists():
         if not backup.exists():
@@ -245,7 +245,7 @@ def main():
     index = next_index(shortcuts)
 
     pack = Path(__file__).resolve().parent.parent
-    launcher_dir = Path.home()/".local/share/steam-media-pack-11/launchers"
+    launcher_dir = Path.home()/".local/share/steam-media-pack/launchers"
     art_root = pack/"steam-art"
     grid_dir = config/"grid"
 
