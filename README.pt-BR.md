@@ -148,7 +148,7 @@ cd Steam-Media-Pack
 Dê permissão aos scripts:
 
 ```bash
-chmod +x install.sh uninstall.sh diagnostico.sh selecionar-modo.sh
+chmod +x install.sh uninstall.sh diagnostics.sh select-mode.sh
 chmod +x launchers/*.sh
 chmod +x tools/*.sh
 chmod +x tools/*.py
@@ -169,7 +169,7 @@ Feche completamente a Steam.
 Depois execute:
 
 ```bash
-./tools/instalar-atalhos-steam.sh
+./tools/install-steam-shortcuts.sh
 ```
 
 Abra novamente a Steam.
@@ -181,7 +181,7 @@ Os atalhos existentes serão preservados.
 # 🖼️ Atualizar somente as artes
 
 ```bash
-./tools/atualizar-artes-steam.sh
+./tools/update-steam-arts.sh
 ```
 
 ---
@@ -189,7 +189,7 @@ Os atalhos existentes serão preservados.
 # 🔄 Restaurar backup
 
 ```bash
-./tools/restaurar-atalhos-steam.sh
+./tools/restore-steam-shortcuts.sh
 ```
 
 ---
@@ -197,7 +197,7 @@ Os atalhos existentes serão preservados.
 # ⚙️ Alterar modo
 
 ```bash
-~/.local/share/steam-media-pack/selecionar-modo.sh
+~/.local/share/steam-media-pack/select-mode.sh
 ```
 
 Modos disponíveis:
@@ -211,7 +211,7 @@ Modos disponíveis:
 # 🔍 Diagnóstico
 
 ```bash
-./diagnostico.sh
+./diagnostics.sh
 ```
 
 ---
@@ -238,8 +238,8 @@ Steam-Media-Pack
 │
 ├── install.sh
 ├── uninstall.sh
-├── selecionar-modo.sh
-├── diagnostico.sh
+├── select-mode.sh
+├── diagnostics.sh
 │
 └── README.md
 ```
