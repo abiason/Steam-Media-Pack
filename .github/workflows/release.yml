@@ -1,0 +1,99 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Define release information
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${GITHUB_REF_NAME}"
+          PACKAGE_NAME="Steam-Media-Pack-${VERSION}"
+          BUILD_DIR="${RUNNER_TEMP}/${PACKAGE_NAME}"
+
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "PACKAGE_NAME=${PACKAGE_NAME}" >> "$GITHUB_ENV"
+          echo "BUILD_DIR=${BUILD_DIR}" >> "$GITHUB_ENV"
+
+      - name: Prepare release package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$BUILD_DIR"
+
+          rsync -a \
+            --exclude=".git/" \
+            --exclude=".github/" \
+            --exclude="__pycache__/" \
+            --exclude="*.pyc" \
+            --exclude="*.zip" \
+            ./ "$BUILD_DIR/"
+
+      - name: Validate release package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            "README.md"
+            "LICENSE"
+            "CHANGELOG.md"
+            "install.sh"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$BUILD_DIR/$file" ]; then
+              echo "::error file=$file::Required release file not found."
+              exit 1
+            fi
+
+            echo "Included: $file"
+          done
+
+          if [ ! -d "$BUILD_DIR/launchers" ]; then
+            echo "::error::Launchers directory was not included."
+            exit 1
+          fi
+
+      - name: Create ZIP package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd "$RUNNER_TEMP"
+          zip -r "${PACKAGE_NAME}.zip" "$PACKAGE_NAME"
+
+      - name: Generate checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd "$RUNNER_TEMP"
+          sha256sum "${PACKAGE_NAME}.zip" > "${PACKAGE_NAME}.zip.sha256"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: Steam Media Pack ${{ env.VERSION }}
+          files: |
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip
+            ${{ runner.temp }}/${{ env.PACKAGE_NAME }}.zip.sha256
+          generate_release_notes: true
+          draft: false
+          prerelease: false
