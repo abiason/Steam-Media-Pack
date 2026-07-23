@@ -140,7 +140,7 @@ Completely close Steam.
 Then run:
 
 ```bash
-./tools/instalar-atalhos-steam.sh
+./tools/install-steam-shortcuts.sh
 ```
 
 Launch Steam again.
@@ -152,7 +152,7 @@ Your existing shortcuts will be preserved.
 # 🖼️ Update Artwork Only
 
 ```bash
-./tools/atualizar-artes-steam.sh
+./tools/update-steam-arts.sh
 ```
 
 ---
@@ -160,7 +160,7 @@ Your existing shortcuts will be preserved.
 # 🔄 Restore Backup
 
 ```bash
-./tools/restaurar-atalhos-steam.sh
+./tools/restore-steam-shortcuts.sh
 ```
 
 ---
@@ -168,7 +168,7 @@ Your existing shortcuts will be preserved.
 # ⚙️ Change Launch Mode
 
 ```bash
-~/.local/share/steam-media-pack/selecionar-modo.sh
+~/.local/share/steam-media-pack/select-mode.sh
 ```
 
 Available modes:
@@ -182,7 +182,7 @@ Available modes:
 # 🔍 Diagnostics
 
 ```bash
-./diagnostico.sh
+./diagnostics.sh
 ```
 
 ---
@@ -209,8 +209,8 @@ Steam-Media-Pack
 │
 ├── install.sh
 ├── uninstall.sh
-├── selecionar-modo.sh
-├── diagnostico.sh
+├── select-mode.sh
+├── diagnostics.sh
 │
 └── README.md
 ```
