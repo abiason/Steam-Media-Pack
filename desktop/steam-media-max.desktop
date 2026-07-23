@@ -2,7 +2,7 @@
 Type=Application
 Name=Max
 Comment=Max para Steam Gaming Mode
-Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack-11/launchers/max.sh
+Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack/launchers/max.sh
 Icon=steam-media-max
 Terminal=false
 Categories=AudioVideo;Network;

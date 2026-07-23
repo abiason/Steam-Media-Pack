@@ -2,10 +2,10 @@
 set -Eeuo pipefail
 
 CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
-CONF="$CONFIG_HOME/steam-media-pack-11/mode.conf"
+CONF="$CONFIG_HOME/steam-media-pack/mode.conf"
 mkdir -p "$(dirname "$CONF")"
 
-echo "Steam Media Pack 11.0 — modo de abertura"
+echo "Steam Media Pack — modo de abertura"
 echo
 echo "1) auto    - Desktop usa app; Gaming Mode usa kiosk"
 echo "2) app     - janela sem barra de endereço"

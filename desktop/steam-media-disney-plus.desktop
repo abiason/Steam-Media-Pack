@@ -2,7 +2,7 @@
 Type=Application
 Name=Disney+
 Comment=Disney+ para Steam Gaming Mode
-Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack-11/launchers/disney-plus.sh
+Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack/launchers/disney-plus.sh
 Icon=steam-media-disney-plus
 Terminal=false
 Categories=AudioVideo;Network;
