@@ -29,7 +29,7 @@ cd Steam-Media-Pack
 # Grant Execution Permissions
 
 ```bash
-chmod +x install.sh uninstall.sh diagnostico.sh selecionar-modo.sh
+chmod +x install.sh uninstall.sh diagnostics.sh select-mode.sh
 
 chmod +x launchers/*.sh
 
