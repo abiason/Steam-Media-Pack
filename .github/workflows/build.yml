@@ -1,0 +1,91 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - develop
+      - homolog
+
+  pull_request:
+    branches:
+      - develop
+      - homolog
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Define package information
+        shell: bash
+        run: |
+          echo "PACKAGE_NAME=Steam-Media-Pack" >> "$GITHUB_ENV"
+          echo "BUILD_DIR=${RUNNER_TEMP}/Steam-Media-Pack" >> "$GITHUB_ENV"
+
+      - name: Prepare package directory
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$BUILD_DIR"
+
+          rsync -a \
+            --exclude=".git/" \
+            --exclude=".github/" \
+            --exclude="__pycache__/" \
+            --exclude="*.pyc" \
+            --exclude="*.zip" \
+            ./ "$BUILD_DIR/"
+
+      - name: Validate package contents
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            "README.md"
+            "LICENSE"
+            "CHANGELOG.md"
+            "install.sh"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$BUILD_DIR/$file" ]; then
+              echo "::error file=$file::Required package file not found."
+              exit 1
+            fi
+
+            echo "Included: $file"
+          done
+
+          if [ ! -d "$BUILD_DIR/launchers" ]; then
+            echo "::error::Launchers directory was not included."
+            exit 1
+          fi
+
+      - name: Create ZIP package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          cd "$RUNNER_TEMP"
+
+          zip -r "${PACKAGE_NAME}.zip" "Steam-Media-Pack"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Steam-Media-Pack
+          path: ${{ runner.temp }}/Steam-Media-Pack.zip
+          if-no-files-found: error
+          retention-days: 14
