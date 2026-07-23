@@ -11,8 +11,8 @@ ICON_DIR="$DATA_HOME/icons/hicolor/scalable/apps"
 mkdir -p "$PACK_DIR/launchers" "$APP_DIR" "$ICON_DIR" "$CONFIG_HOME/steam-media-pack-11"
 
 install -m 755 "$BASE/launchers/"*.sh "$PACK_DIR/launchers/"
-install -m 755 "$BASE/diagnostico.sh" "$PACK_DIR/diagnostico.sh"
-install -m 755 "$BASE/selecionar-modo.sh" "$PACK_DIR/selecionar-modo.sh"
+install -m 755 "$BASE/diagnostics.sh" "$PACK_DIR/diagnostico.sh"
+install -m 755 "$BASE/select-mode.sh" "$PACK_DIR/selecionar-modo.sh"
 install -m 644 "$BASE/desktop/"*.desktop "$APP_DIR/"
 install -m 644 "$BASE/icons/"*.svg "$ICON_DIR/"
 
