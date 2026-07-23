@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - homolog
+
+  pull_request:
+    branches:
+      - develop
+      - homolog
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shellcheck
+
+      - name: Validate Bash syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r -d '' file; do
+            echo "Checking Bash syntax: $file"
+            bash -n "$file"
+          done < <(find . -type f -name "*.sh" -print0)
+
+      - name: Run ShellCheck
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -d '' scripts < <(find . -type f -name "*.sh" -print0)
+
+          if [ "${#scripts[@]}" -eq 0 ]; then
+            echo "No Bash scripts found."
+            exit 0
+          fi
+
+          shellcheck "${scripts[@]}"
+
+      - name: Validate Python syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r -d '' file; do
+            echo "Compiling Python file: $file"
+            python -m py_compile "$file"
+          done < <(find . -type f -name "*.py" -print0)
+
+      - name: Check required project files
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            "README.md"
+            "LICENSE"
+            "CHANGELOG.md"
+            "CONTRIBUTING.md"
+            "SECURITY.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "::error file=$file::Required file not found."
+              exit 1
+            fi
+
+            echo "Found: $file"
+          done
