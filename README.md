@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="docs/images/banner.png" alt="Steam Media Pack Banner" width="100%">
+  <img src="docs/assets/branding/banner.png" alt="Steam Media Pack Banner" width="100%">
+</p>
+
+<p align="center">
+  <img src="docs/assets/branding/logo.png" alt="Steam Media Pack Logo" width="180">
 </p>
 
 <h1 align="center">Steam Media Pack</h1>
