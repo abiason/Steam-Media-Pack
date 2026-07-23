@@ -124,7 +124,8 @@ detect_resolution() {
 }
 
 launch_detached() {
-    local unit="steam-media-${APP_ID}-$(date +%s)"
+    local unit
+    unit="steam-media-${APP_ID}-$(date +%s)"
     sanitize_environment
     patch_chrome_preferences
 
