@@ -39,6 +39,21 @@ Tudo integrado à experiência da Steam.
 
 ---
 
+# ✨ Destaques
+
+- 🚀 Integração automática com a Steam
+- 🎨 Instalação automática das artes da biblioteca
+- 🎮 Compatível com Big Picture
+- 🖥️ Desktop Mode e Gaming Mode
+- 💾 Backup automático do `shortcuts.vdf`
+- 🔄 Restauração dos atalhos
+- 🌐 Suporte a navegadores Chromium
+- 📺 Launchers otimizados para streaming
+- 📦 Instalação simples e rápida
+- 🛠️ Projeto Open Source
+
+---
+
 # ✨ Principais Recursos
 
 ✅ Integração automática com a Steam
