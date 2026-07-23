@@ -20,7 +20,9 @@ cat >"$CONFIG_HOME/steam-media-pack-11/mode.conf" <<'EOF'
 MODE=auto
 EOF
 
-command -v update-desktop-database >/dev/null 2>&1 && update-desktop-database "$APP_DIR" || true
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database "$APP_DIR" || true
+fi
 
 cat <<EOF
 
