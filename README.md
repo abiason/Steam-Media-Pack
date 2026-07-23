@@ -1,164 +1,331 @@
-# Steam Media Pack
+<p align="center">
+  <img src="docs/assets/branding/banner.png" alt="Steam Media Pack Banner" width="100%">
+</p>
 
-Transforme a biblioteca da Steam em uma central de mídia no Linux, com atalhos para serviços de streaming executados pelo navegador em modo de tela cheia.
+<p align="center">
+  <img src="docs/assets/branding/logo.png" alt="Steam Media Pack Logo" width="180">
+</p>
 
-> Projeto comunitário e não oficial. Não possui vínculo com Valve, Netflix, Amazon, Disney, Warner Bros. Discovery, Google ou Spotify.
+<h1 align="center">Steam Media Pack</h1>
 
-## Serviços incluídos
+<p align="center">
+Turn Steam into the ultimate media center for Linux.
+</p>
 
-- Netflix
-- Prime Video
-- Disney+
-- Max
-- YouTube TV
-- Spotify
+<p align="center">
 
-## Principais recursos
+![Release](https://img.shields.io/github/v/release/abiason/Steam-Media-Pack?style=for-the-badge)
+![Build](https://img.shields.io/github/actions/workflow/status/abiason/Steam-Media-Pack/build.yml?branch=develop&label=Build&style=for-the-badge)
+![CI](https://img.shields.io/github/actions/workflow/status/abiason/Steam-Media-Pack/ci.yml?branch=develop&label=CI&style=for-the-badge)
+![License](https://img.shields.io/github/license/abiason/Steam-Media-Pack?style=for-the-badge)
+![Platform](https://img.shields.io/badge/Linux-CachyOS%20%7C%20SteamOS%20%7C%20Bazzite-blue?style=for-the-badge)
 
-- Launchers preparados para Desktop Mode e Gaming Mode.
-- Modo `kiosk` em tela cheia no Gaming Mode.
-- Limpeza seletiva das variáveis herdadas da Steam, sem remover variáveis essenciais da sessão gráfica.
-- Detecção da resolução atual com `xrandr`.
-- Idioma do navegador configurado como `pt-BR`.
-- Criação automática dos atalhos não Steam.
-- Instalação automática das artes da biblioteca.
-- Preservação dos atalhos não Steam já existentes.
-- Backup de `shortcuts.vdf` antes da primeira alteração.
-- Ferramenta de restauração do backup.
-- Seleção entre os modos `auto`, `kiosk` e `app`.
-- Logs separados por serviço.
+</p>
 
-## Compatibilidade prevista
+---
 
-A versão 11.0 foi construída e validada no **CachyOS Handheld Edition**. Ela também pode funcionar em outras distribuições com Steam e navegador Chromium compatível, mas esses ambientes ainda não foram formalmente validados pelo projeto.
+# 🎮 What is Steam Media Pack?
 
-## Requisitos
+**Steam Media Pack** is an Open Source project developed by **Tech Dual 4.0** that transforms your Steam library into a complete entertainment hub.
 
-- Linux com sessão gráfica X11 ou XWayland capaz de executar `xrandr`.
-- Steam para Linux.
-- Bash.
-- Python 3 para a integração automática com a Steam.
-- Google Chrome, Chromium ou navegador compatível detectado pelos launchers.
-- Acesso às plataformas de streaming e assinatura ativa quando exigida pelo serviço.
+With just a few clicks, you can add your favorite streaming services directly to Steam, featuring:
 
-## Instalação rápida
+- Desktop Mode
+- Gaming Mode
+- Big Picture
+- Steam Deck
+- Automatic artwork installation
+- Automatic shortcut creation
+- Safe backups
+- Automatic restore
 
-Baixe ou clone o projeto e execute:
+Everything seamlessly integrated into the Steam experience.
+
+---
+
+# ✨ Features
+
+- 🚀 Automatic Steam integration
+- 🎨 Automatic library artwork installation
+- 🎮 Automatic Steam shortcut creation
+- 💾 Automatic backup of `shortcuts.vdf`
+- 🔄 Backup restoration
+- 🖥️ Desktop Mode support
+- 🎮 Gaming Mode support
+- 🖥️ Kiosk Mode
+- 📱 App Mode
+- ⚙️ Auto Mode
+- 📺 Streaming-optimized launchers
+- 🌐 Chromium-based browser support
+- 📐 Automatic resolution detection
+- 🧹 Smart Steam environment cleanup
+- 📋 Individual logs for each service
+- 🛠️ Fully Open Source
+
+---
+
+# 📺 Supported Services
+
+| Service | Status |
+|----------|:------:|
+| Netflix | ✅ |
+| Prime Video | ✅ |
+| Disney+ | ✅ |
+| Max | ✅ |
+| Spotify | ✅ |
+| YouTube TV | ✅ |
+
+---
+
+# 🖥️ Compatibility
+
+| Platform | Status |
+|----------|:------:|
+| CachyOS Handheld | ✅ Official |
+| SteamOS | 🟡 Compatible (not officially validated) |
+| Bazzite | 🟡 Compatible (not officially validated) |
+| Arch Linux | 🟡 Compatible |
+| Nobara | 🟡 Compatible |
+
+---
+
+# 📸 Screenshots
+
+## Steam Library
+
+> *(Coming soon)*
+
+---
+
+## Gaming Mode
+
+> *(Coming soon)*
+
+---
+
+## Desktop Mode
+
+> *(Coming soon)*
+
+---
+
+# 🚀 Quick Start
 
 ```bash
-chmod +x install.sh uninstall.sh diagnostico.sh selecionar-modo.sh
-chmod +x launchers/*.sh tools/*.sh tools/*.py
+git clone https://github.com/abiason/Steam-Media-Pack.git
+
+cd Steam-Media-Pack
+
 ./install.sh
 ```
 
-O conteúdo principal será instalado em:
+For detailed installation instructions, see the documentation in `docs/`.
 
-```text
-~/.local/share/steam-media-pack
+---
+
+# 📦 Installation
+
+See the complete installation guide in:
+
+```
+docs/user-guide/installation.md
 ```
 
-As configurações serão gravadas em:
+---
 
-```text
-~/.config/steam-media-pack
-```
+# 🎨 Install Steam Shortcuts Automatically
 
-### Instalar automaticamente os atalhos na Steam
+Completely close Steam.
 
-1. Feche completamente a Steam, inclusive o processo em segundo plano.
-2. Execute:
+Then run:
 
 ```bash
-./tools/instalar-atalhos-steam.sh
+./tools/install-steam-shortcuts.sh
 ```
 
-3. Abra novamente a Steam.
+Launch Steam again.
 
-O instalador adiciona somente os serviços ausentes e preserva os atalhos não Steam já cadastrados.
+Your existing shortcuts will be preserved.
 
-## Alterar o modo de abertura
+---
+
+# 🖼️ Update Artwork Only
 
 ```bash
-~/.local/share/steam-media-pack/selecionar-modo.sh
+./tools/update-steam-arts.sh
 ```
 
-Modos disponíveis:
+---
 
-- `auto`: usa `app` no Desktop Mode e `kiosk` no Gaming Mode.
-- `kiosk`: força tela cheia sem interface do navegador.
-- `app`: abre como aplicativo do navegador.
-
-## Atualizar somente as artes
-
-Feche completamente a Steam e execute:
+# 🔄 Restore Backup
 
 ```bash
-./tools/atualizar-artes-steam.sh
+./tools/restore-steam-shortcuts.sh
 ```
 
-## Restaurar o backup dos atalhos
+---
 
-Feche completamente a Steam e execute:
+# ⚙️ Change Launch Mode
 
 ```bash
-./tools/restaurar-atalhos-steam.sh
+~/.local/share/steam-media-pack/select-mode.sh
 ```
 
-## Diagnóstico
+Available modes:
+
+- Auto
+- Kiosk
+- App
+
+---
+
+# 🔍 Diagnostics
 
 ```bash
-./diagnostico.sh
+./diagnostics.sh
 ```
 
-## Desinstalação
+---
+
+# 🗑️ Uninstallation
 
 ```bash
 ./uninstall.sh
 ```
 
-A desinstalação remove os launchers, arquivos `.desktop`, ícones e configurações do pacote. Ela não remove automaticamente os atalhos já gravados em `shortcuts.vdf`.
+---
 
-## Documentação
-
-- [Instalação detalhada](docs/INSTALLATION.md)
-- [Configuração e modos](docs/CONFIGURATION.md)
-- [Serviços incluídos](docs/SERVICES.md)
-- [Integração com a Steam](docs/STEAM_INTEGRATION.md)
-- [Artes da biblioteca](docs/ARTWORK.md)
-- [Solução de problemas](docs/TROUBLESHOOTING.md)
-- [Perguntas frequentes](docs/FAQ.md)
-- [Arquitetura do projeto](docs/ARCHITECTURE.md)
-
-## Estrutura do projeto
+# 📁 Project Structure
 
 ```text
-Steam-Media-Pack/
-├── .github/
-├── desktop/
-├── docs/
-├── icons/
-├── launchers/
-├── steam-art/
-├── tools/
-├── CHANGELOG.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── README.md
-├── ROADMAP.md
-├── SECURITY.md
-├── diagnostico.sh
+Steam-Media-Pack
+│
+├── desktop
+├── docs
+├── icons
+├── launchers
+├── steam-art
+├── tools
+│
 ├── install.sh
-├── selecionar-modo.sh
-└── uninstall.sh
+├── uninstall.sh
+├── select-mode.sh
+├── diagnostics.sh
+│
+└── README.md
 ```
 
-## Avisos importantes
+---
 
-Os serviços de streaming podem alterar seus sites, mecanismos de autenticação, DRM e requisitos de navegador sem aviso. O projeto não contorna DRM, não fornece contas e não distribui conteúdo protegido.
+# 📚 Documentation
 
-As marcas, nomes e logotipos pertencem aos respectivos titulares. Consulte [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Documentation includes:
 
-## Licença
+- Installation
+- Configuration
+- Steam Integration
+- Library Artwork
+- FAQ
+- Troubleshooting
+- Architecture
 
-O código do projeto é disponibilizado sob a [Licença MIT](LICENSE). Marcas e elementos de terceiros não são licenciados pelo projeto.
+All documentation is available in the **docs/** directory.
+
+---
+
+# 🛣️ Roadmap
+
+## v11
+
+- ✅ Steam Integration
+- ✅ Automatic Artwork
+- ✅ Backup
+- ✅ Restore
+- ✅ Steam Shortcuts
+
+## v11.1 — Foundation
+
+- Git Flow
+- CI/CD
+- Release Automation
+- Documentation
+- Branding
+- ADR
+
+## v11.2 — Experience
+
+- GitHub Pages
+- Technical Diagrams
+- User Guide
+- Developer Guide
+
+## v12.0 — Product
+
+- GUI Installer
+- Plugin System
+- YAML Configuration
+- Flatpak
+- AppImage
+- Automatic Updates
+
+- ⏳ New user interface
+- ⏳ Apple TV+
+- ⏳ Jellyfin
+- ⏳ Plex
+- ⏳ GloboPlay
+- ⏳ Installer improvements
+- ⏳ File-based configuration
+- ⏳ Automatic updater
+
+---
+
+# 🤝 Contributing
+
+Contributions are welcome!
+
+Before submitting a Pull Request, please read:
+
+- CONTRIBUTING.md
+- CODE_OF_CONDUCT.md
+- SECURITY.md
+
+---
+
+# ⚠️ Disclaimer
+
+Steam Media Pack is an independent Open Source project.
+
+It is **not affiliated with or endorsed by**:
+
+- Valve
+- Netflix
+- Amazon
+- Disney
+- Warner Bros. Discovery
+- Google
+- Spotify
+
+All trademarks are the property of their respective owners.
+
+---
+
+# 👨‍💻 Developed by
+
+## Tech Dual 4.0
+
+Created and maintained by **Alberto Biason**.
+
+---
+
+# 📄 License
+
+Distributed under the MIT License.
+
+See **LICENSE** for more information.
+
+# 🔗 Useful Links
+
+- Documentation → `docs/`
+- Roadmap → `ROADMAP.md`
+- Changelog → `CHANGELOG.md`
+- Releases → GitHub Releases
