@@ -2,7 +2,7 @@
 Type=Application
 Name=Netflix
 Comment=Netflix para Steam Gaming Mode
-Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack-11/launchers/netflix.sh
+Exec=/usr/bin/bash /home/oai/.local/share/steam-media-pack/launchers/netflix.sh
 Icon=steam-media-netflix
 Terminal=false
 Categories=AudioVideo;Network;
