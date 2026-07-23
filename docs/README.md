@@ -45,6 +45,20 @@ Reference material for the project.
 
 ---
 
+# Branding
+
+Official visual identity documentation.
+
+- Brand Guidelines
+- Logo
+- Colors
+- Typography
+- Icons
+- Screenshots
+- Templates
+
+---
+
 # 🏛 Architecture Decision Records (ADR)
 
 Design decisions that define the project's architecture and evolution.
