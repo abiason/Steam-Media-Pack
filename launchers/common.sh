@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-: "${APP_ID:?APP_ID não definido}"
-: "${APP_NAME:?APP_NAME não definido}"
-: "${APP_URL:?APP_URL não definido}"
+APP_ID="${1:?APP_ID não definido}"
+APP_NAME="${2:?APP_NAME não definido}"
+APP_URL="${3:?APP_URL não definido}"
 
 STATE_HOME="${XDG_STATE_HOME:-$HOME_DIR/.local/state}"
 PROFILE_DIR="$CONFIG_HOME/steam-media-pack/profiles/$APP_ID"
