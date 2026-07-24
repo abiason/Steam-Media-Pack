@@ -5,6 +5,8 @@ APP_ID="${1:?APP_ID não definido}"
 APP_NAME="${2:?APP_NAME não definido}"
 APP_URL="${3:?APP_URL não definido}"
 
+HOME_DIR="${HOME:-/home/deck}"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME_DIR/.config}"
 STATE_HOME="${XDG_STATE_HOME:-$HOME_DIR/.local/state}"
 PROFILE_DIR="$CONFIG_HOME/steam-media-pack/profiles/$APP_ID"
 LOG_DIR="$STATE_HOME/steam-media-pack/logs"
