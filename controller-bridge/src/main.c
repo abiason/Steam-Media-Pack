@@ -17,7 +17,7 @@
 #define MAX_SPEED 16.0
 #define LOOP_DELAY_MS 8
 
-static volatile sig_atomic_t running = 1;
+static void handle_signal(...)
 
 static void handle_signal(int signal_number)
 {
@@ -155,8 +155,7 @@ int main(void)
     bool right_pressed = false;
     bool middle_pressed = false;
 
-    signal(SIGINT, handle_signal);
-    signal(SIGTERM, handle_signal);
+    signals_install();
 
     if (SDL_Init(SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) != 0) {
         fprintf(stderr, "Erro ao inicializar SDL2: %s\n", SDL_GetError());

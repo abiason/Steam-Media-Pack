@@ -1,5 +1,5 @@
-#ifndef SIGNALS_H
-#define SIGNALS_H
+#ifndef SMP_SIGNALS_H
+#define SMP_SIGNALS_H
 
 #include <signal.h>
 
