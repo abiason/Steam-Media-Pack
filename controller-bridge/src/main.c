@@ -1,5 +1,6 @@
 #include "clock.h"
 #include "config.h"
+#include "config_parser.h"
 #include "controller.h"
 #include "log.h"
 #include "scroll.h"
@@ -107,6 +108,8 @@ static SDL_GameController *wait_for_controller(void)
 int main(void)
 {
     config_set_defaults();
+
+    config_load(CONFIG_DEFAULT_PATH);
 
     LOG_INFO(
         "Iniciando %s %s.",
