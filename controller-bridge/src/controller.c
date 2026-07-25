@@ -153,12 +153,12 @@ void controller_poll(
     state->move_x = calculate_axis_speed(
         SDL_GameControllerGetAxis(
             controller,
-            SDL_CONTROLLER_AXIS_RIGHTX));
+            SDL_CONTROLLER_AXIS_LEFTX));
 
     state->move_y = calculate_axis_speed(
         SDL_GameControllerGetAxis(
             controller,
-            SDL_CONTROLLER_AXIS_RIGHTY));
+            SDL_CONTROLLER_AXIS_LEFTY));
 
     state->actions = INPUT_NONE;
 
