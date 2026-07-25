@@ -1,15 +1,22 @@
 #ifndef SMP_CONFIG_H
 #define SMP_CONFIG_H
 
-#define DEVICE_NAME "Steam Media Pack Controller Bridge"
+typedef struct
+{
+    int cursor_deadzone;
+    int cursor_max_speed;
 
-#define DEVICE_VENDOR  0x1209
-#define DEVICE_PRODUCT 0x0001
-#define DEVICE_VERSION 1
+    float cursor_exponent;
+    float cursor_sensitivity;
+    float cursor_smoothing;
 
-#define DEADZONE      7000
-#define MIN_SPEED     2.0
-#define MAX_SPEED     16.0
-#define LOOP_DELAY_MS 8
+    unsigned int scroll_initial_delay_ms;
+    unsigned int scroll_repeat_interval_ms;
+    int scroll_step;
+} ControllerConfig;
 
-#endif
+extern ControllerConfig g_config;
+
+void config_set_defaults(void);
+
+#endif /* SMP_CONFIG_H */

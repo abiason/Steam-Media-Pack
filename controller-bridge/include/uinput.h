@@ -3,6 +3,11 @@
 
 #include <stdbool.h>
 
+#define DEVICE_NAME "Steam Media Pack Controller Bridge"
+#define DEVICE_VENDOR 0x1209
+#define DEVICE_PRODUCT 0x0001
+#define DEVICE_VERSION 0x0001
+
 int uinput_create(void);
 
 void uinput_destroy(int file_descriptor);

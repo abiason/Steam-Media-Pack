@@ -1,45 +1,14 @@
 #include "controller.h"
+#include "cursor.h"
 
 #include "config.h"
 #include "log.h"
+#include "mapping.h"
 
 #include <SDL2/SDL.h>
 
 #include <math.h>
 #include <stdlib.h>
-
-#define TRIGGER_THRESHOLD 20000
-
-static int calculate_axis_speed(Sint16 value)
-{
-    int absolute_value = abs((int)value);
-
-    if (absolute_value <= DEADZONE)
-    {
-        return 0;
-    }
-
-    double normalized =
-        (double)(absolute_value - DEADZONE) /
-        (double)(32767 - DEADZONE);
-
-    if (normalized < 0.0)
-    {
-        normalized = 0.0;
-    }
-    else if (normalized > 1.0)
-    {
-        normalized = 1.0;
-    }
-
-    double speed =
-        MIN_SPEED +
-        normalized * (MAX_SPEED - MIN_SPEED);
-
-    int direction = value < 0 ? -1 : 1;
-
-    return direction * (int)lround(speed);
-}
 
 SDL_GameController *controller_open_first(void)
 {
@@ -143,63 +112,50 @@ bool controller_is_connected(
 
 void controller_poll(
     SDL_GameController *controller,
-    ControllerState *state)
+    InputState *state)
 {
     if (controller == NULL || state == NULL)
     {
         return;
     }
 
-    state->move_x = calculate_axis_speed(
-        SDL_GameControllerGetAxis(
-            controller,
-            SDL_CONTROLLER_AXIS_LEFTX));
+    Sint16 axis_x = SDL_GameControllerGetAxis(
+        controller,
+        SDL_CONTROLLER_AXIS_LEFTX);
 
-    state->move_y = calculate_axis_speed(
-        SDL_GameControllerGetAxis(
-            controller,
-            SDL_CONTROLLER_AXIS_LEFTY));
+    Sint16 axis_y = SDL_GameControllerGetAxis(
+        controller,
+        SDL_CONTROLLER_AXIS_LEFTY);
 
-    state->actions = INPUT_NONE;
+    cursor_update(
+        axis_x,
+        axis_y,
+        &state->cursor);
 
-    if (SDL_GameControllerGetButton(
-            controller,
-            SDL_CONTROLLER_BUTTON_A))
+    state->buttons.actions = INPUT_NONE;
+
+    if (mapping_left_click(controller))
     {
-        state->actions |= INPUT_LEFT_CLICK;
+        state->buttons.actions |= INPUT_LEFT_CLICK;
     }
 
-    if (SDL_GameControllerGetButton(
-            controller,
-            SDL_CONTROLLER_BUTTON_B))
+    if (mapping_right_click(controller))
     {
-        state->actions |= INPUT_RIGHT_CLICK;
+        state->buttons.actions |= INPUT_RIGHT_CLICK;
     }
 
-    if (SDL_GameControllerGetButton(
-            controller,
-            SDL_CONTROLLER_BUTTON_X))
+    if (mapping_middle_click(controller))
     {
-        state->actions |= INPUT_MIDDLE_CLICK;
+        state->buttons.actions |= INPUT_MIDDLE_CLICK;
     }
 
-    Sint16 left_trigger =
-        SDL_GameControllerGetAxis(
-            controller,
-            SDL_CONTROLLER_AXIS_TRIGGERLEFT);
-
-    Sint16 right_trigger =
-        SDL_GameControllerGetAxis(
-            controller,
-            SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
-
-    if (left_trigger > TRIGGER_THRESHOLD)
+    if (mapping_scroll_up(controller))
     {
-        state->actions |= INPUT_SCROLL_UP;
+        state->buttons.actions |= INPUT_SCROLL_UP;
     }
 
-    if (right_trigger > TRIGGER_THRESHOLD)
+    if (mapping_scroll_down(controller))
     {
-        state->actions |= INPUT_SCROLL_DOWN;
+        state->buttons.actions |= INPUT_SCROLL_DOWN;
     }
 }
