@@ -1,3 +1,4 @@
+#include "cli.h"
 #include "clock.h"
 #include "config.h"
 #include "config_parser.h"
@@ -105,11 +106,35 @@ static SDL_GameController *wait_for_controller(void)
     return NULL;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    CliOptions cli;
+
+    cli_init(&cli);
+
+    if (!cli_parse(&cli, argc, argv))
+    {
+        return EXIT_FAILURE;
+    }
+
+    if (cli.show_help)
+    {
+        cli_print_help(argv[0]);
+        return EXIT_SUCCESS;
+    }
+
+    if (cli.show_version)
+    {
+        cli_print_version();
+        return EXIT_SUCCESS;
+    }
+
     config_set_defaults();
 
-    config_load(CONFIG_DEFAULT_PATH);
+    if (!config_load(cli.config_path))
+    {
+        return EXIT_FAILURE;
+    }
 
     LOG_INFO(
         "Iniciando %s %s.",
