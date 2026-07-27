@@ -1,0 +1,9 @@
+cursor.deadzone=8000
+cursor.max_speed=20
+cursor.exponent=2.2
+cursor.sensitivity=1.0
+cursor.smoothing=0.75
+
+scroll.initial_delay=250
+scroll.repeat_interval=75
+scroll.step=1
