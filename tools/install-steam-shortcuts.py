@@ -1,646 +1,441 @@
 #!/usr/bin/env python3
+
 from __future__ import annotations
 
-from collections import OrderedDict
-from pathlib import Path
+import argparse
+import binascii
 import shutil
-import struct
-import subprocess
 import sys
-import zlib
+from pathlib import Path
+from typing import Any
 
+from lib.services import SERVICES
+from lib.steam_users import choose_users, find_userdata, steam_running
+from lib.steam_vdf import VDFError, load_vdf, save_vdf
 
-SERVICES = {
-    "netflix": ("Netflix", "netflix.sh"),
-    "prime-video": ("Prime Video", "prime-video.sh"),
-    "disney-plus": ("Disney+", "disney-plus.sh"),
-    "max": ("Max", "max.sh"),
-    "youtube-tv": ("YouTube TV", "youtube-tv.sh"),
-    "spotify": ("Spotify", "spotify.sh"),
-}
 
-TYPE_OBJECT = 0x00
-TYPE_STRING = 0x01
-TYPE_INT32 = 0x02
-TYPE_FLOAT32 = 0x03
-TYPE_PTR = 0x04
-TYPE_WSTRING = 0x05
-TYPE_COLOR = 0x06
-TYPE_UINT64 = 0x07
-TYPE_END = 0x08
+PROJECT_DIR = Path(__file__).resolve().parent.parent
 
+INSTALLED_LAUNCHERS_DIR = (
+    Path.home()
+    / ".local"
+    / "share"
+    / "steam-media-pack"
+    / "launchers"
+)
 
-def read_cstr(data: bytes, pos: int):
-    end = data.index(b"\x00", pos)
+STEAM_ART_DIR = PROJECT_DIR / "steam-art"
 
-    return (
-        data[pos:end].decode("utf-8", errors="replace"),
-        end + 1,
-    )
+SHORTCUTS_RELATIVE_PATH = Path("config") / "shortcuts.vdf"
+GRID_RELATIVE_PATH = Path("config") / "grid"
 
+BACKUP_FILENAME = "shortcuts.vdf.before-steam-media-pack-install"
 
-def parse_object(data: bytes, pos: int):
-    obj = OrderedDict()
 
-    while pos < len(data):
-        value_type = data[pos]
-        pos += 1
+def log(message: str) -> None:
+    print(f"[INFO] {message}")
 
-        if value_type == TYPE_END:
-            return obj, pos
 
-        key, pos = read_cstr(data, pos)
+def warning(message: str) -> None:
+    print(f"[AVISO] {message}")
 
-        if value_type == TYPE_OBJECT:
-            value, pos = parse_object(data, pos)
 
-        elif value_type == TYPE_STRING:
-            value, pos = read_cstr(data, pos)
+def error(message: str) -> None:
+    print(f"[ERRO] {message}", file=sys.stderr)
 
-        elif value_type == TYPE_INT32:
-            value = struct.unpack_from("<I", data, pos)[0]
-            pos += 4
 
-        elif value_type == TYPE_FLOAT32:
-            value = struct.unpack_from("<f", data, pos)[0]
-            pos += 4
+def calculate_appid(executable: str, app_name: str) -> int:
+    """
+    Calcula o AppID de um atalho não Steam.
 
-        elif value_type == TYPE_PTR:
-            value = struct.unpack_from("<I", data, pos)[0]
-            pos += 4
+    A Steam utiliza o CRC32 da concatenação entre o executável e o nome
+    do aplicativo. O bit mais significativo deve estar habilitado.
+    """
 
-        elif value_type == TYPE_WSTRING:
-            chars = []
+    source = f"{executable}{app_name}".encode("utf-8")
+    checksum = binascii.crc32(source) & 0xFFFFFFFF
 
-            while data[pos : pos + 2] != b"\x00\x00":
-                chars.append(data[pos : pos + 2])
-                pos += 2
+    return checksum | 0x80000000
 
-            pos += 2
 
-            value = b"".join(chars).decode(
-                "utf-16le",
-                errors="replace",
-            )
+def normalize_executable(path: Path) -> str:
+    return f'"{path}"'
 
-        elif value_type == TYPE_COLOR:
-            value = data[pos : pos + 4]
-            pos += 4
 
-        elif value_type == TYPE_UINT64:
-            value = struct.unpack_from("<Q", data, pos)[0]
-            pos += 8
+def normalize_start_directory(path: Path) -> str:
+    return f'"{path}"'
 
-        else:
-            raise ValueError(
-                "Tipo VDF binário não suportado: "
-                f"{value_type:#x}"
-            )
 
-        obj[key] = (value_type, value)
+def get_shortcuts_container(
+    document: dict[str, Any],
+) -> dict[str, Any]:
+    shortcuts = document.get("shortcuts")
 
-    raise ValueError("VDF terminou sem marcador final")
+    if shortcuts is None:
+        shortcuts = {}
+        document["shortcuts"] = shortcuts
 
-
-def parse_vdf(data: bytes):
-    if not data:
-        return OrderedDict()
-
-    root, _ = parse_object(data, 0)
-
-    return root
-
-
-def cstr(value: str) -> bytes:
-    return value.encode("utf-8") + b"\x00"
-
-
-def encode_entry(key: str, typed_value):
-    value_type, value = typed_value
-
-    output = bytes([value_type]) + cstr(key)
-
-    if value_type == TYPE_OBJECT:
-        output += encode_object(value)
-
-    elif value_type == TYPE_STRING:
-        output += cstr(str(value))
-
-    elif value_type in (TYPE_INT32, TYPE_PTR):
-        output += struct.pack(
-            "<I",
-            int(value) & 0xFFFFFFFF,
-        )
-
-    elif value_type == TYPE_FLOAT32:
-        output += struct.pack("<f", float(value))
-
-    elif value_type == TYPE_WSTRING:
-        output += (
-            str(value).encode("utf-16le")
-            + b"\x00\x00"
-        )
-
-    elif value_type == TYPE_COLOR:
-        raw_value = bytes(value)
-        output += (
-            raw_value + b"\x00\x00\x00\x00"
-        )[:4]
-
-    elif value_type == TYPE_UINT64:
-        output += struct.pack("<Q", int(value))
-
-    else:
-        raise ValueError(
-            "Tipo não suportado ao gravar: "
-            f"{value_type:#x}"
-        )
-
-    return output
-
-
-def encode_object(obj):
-    output = bytearray()
-
-    for key, typed_value in obj.items():
-        output += encode_entry(key, typed_value)
-
-    output.append(TYPE_END)
-
-    return bytes(output)
-
-
-def encode_vdf(root):
-    return encode_object(root)
-
-
-def steam_running():
-    for process_name in ("steam", "steamwebhelper"):
-        try:
-            result = subprocess.run(
-                ["pgrep", "-x", process_name],
-                capture_output=True,
-                check=False,
-            )
-
-            if result.returncode == 0:
-                return True
-
-        except OSError:
-            pass
-
-    return False
-
-
-def find_userdata():
-    steam_roots = [
-        Path.home() / ".local/share/Steam",
-        Path.home() / ".steam/steam",
-    ]
-
-    users = []
-    seen_roots = set()
-    seen_users = set()
-
-    for steam_root in steam_roots:
-        try:
-            real_root = steam_root.resolve()
-        except OSError:
-            real_root = steam_root
-
-        if real_root in seen_roots:
-            continue
-
-        if not steam_root.exists():
-            continue
-
-        seen_roots.add(real_root)
-
-        userdata_dir = steam_root / "userdata"
-
-        if not userdata_dir.exists():
-            continue
-
-        for user_dir in sorted(
-            userdata_dir.iterdir(),
-            key=lambda path: path.name,
-        ):
-            if not user_dir.is_dir():
-                continue
-
-            if not user_dir.name.isdigit():
-                continue
-
-            if not (user_dir / "config").exists():
-                continue
-
-            try:
-                real_user_dir = user_dir.resolve()
-            except OSError:
-                real_user_dir = user_dir
-
-            if real_user_dir in seen_users:
-                continue
-
-            seen_users.add(real_user_dir)
-            users.append((steam_root, user_dir))
-
-    return users
-
-
-def make_shortcut(
-    app_name: str,
-    script_path: Path,
-    launcher_dir: Path,
-):
-    executable = "/usr/bin/bash"
-
-    app_id = (
-        zlib.crc32(
-            (executable + app_name).encode("utf-8")
-        )
-        | 0x80000000
-    ) & 0xFFFFFFFF
-
-    tags = OrderedDict()
-
-    entry = OrderedDict(
-        [
-            ("appid", (TYPE_INT32, app_id)),
-            ("AppName", (TYPE_STRING, app_name)),
-            ("Exe", (TYPE_STRING, executable)),
-            (
-                "StartDir",
-                (TYPE_STRING, str(launcher_dir)),
-            ),
-            ("icon", (TYPE_STRING, "")),
-            ("ShortcutPath", (TYPE_STRING, "")),
-            (
-                "LaunchOptions",
-                (
-                    TYPE_STRING,
-                    f'"{script_path}"',
-                ),
-            ),
-            ("IsHidden", (TYPE_INT32, 0)),
-            (
-                "AllowDesktopConfig",
-                (TYPE_INT32, 1),
-            ),
-            ("AllowOverlay", (TYPE_INT32, 0)),
-            ("OpenVR", (TYPE_INT32, 0)),
-            ("Devkit", (TYPE_INT32, 0)),
-            ("DevkitGameID", (TYPE_STRING, "")),
-            (
-                "DevkitOverrideAppID",
-                (TYPE_INT32, 0),
-            ),
-            ("LastPlayTime", (TYPE_INT32, 0)),
-            ("FlatpakAppID", (TYPE_STRING, "")),
-            ("tags", (TYPE_OBJECT, tags)),
-        ]
-    )
-
-    return entry, app_id
-
-
-def get_shortcuts(root):
-    if "shortcuts" not in root:
-        root["shortcuts"] = (
-            TYPE_OBJECT,
-            OrderedDict(),
-        )
-
-    value_type, shortcuts = root["shortcuts"]
-
-    if value_type != TYPE_OBJECT:
-        raise ValueError(
-            "Estrutura shortcuts inválida"
+    if not isinstance(shortcuts, dict):
+        raise VDFError(
+            "A chave 'shortcuts' não contém um objeto VDF válido."
         )
 
     return shortcuts
 
 
-def existing_shortcuts(shortcuts):
-    result = {}
-
-    for _, typed_entry in shortcuts.items():
-        value_type, entry = typed_entry
-
-        if value_type != TYPE_OBJECT:
-            continue
-
-        name_value = (
-            entry.get("AppName")
-            or entry.get("appname")
-            or entry.get("appName")
-        )
-
-        app_id_value = entry.get("appid")
-
-        if not name_value or not app_id_value:
-            continue
-
-        result[str(name_value[1])] = {
-            "entry": entry,
-            "appid": (
-                int(app_id_value[1])
-                & 0xFFFFFFFF
-            ),
-        }
-
-    return result
-
-
-def next_index(shortcuts):
-    indexes = []
+def next_shortcut_index(shortcuts: dict[str, Any]) -> str:
+    numeric_indexes = []
 
     for key in shortcuts:
-        try:
-            indexes.append(int(key))
-        except ValueError:
+        if str(key).isdigit():
+            numeric_indexes.append(int(key))
+
+    if not numeric_indexes:
+        return "0"
+
+    return str(max(numeric_indexes) + 1)
+
+
+def find_existing_shortcut(
+    shortcuts: dict[str, Any],
+    app_name: str,
+) -> tuple[str, dict[str, Any]] | None:
+    for index, shortcut in shortcuts.items():
+        if not isinstance(shortcut, dict):
             continue
 
-    return max(indexes, default=-1) + 1
+        current_name = str(shortcut.get("appname", "")).strip()
+
+        if current_name.casefold() == app_name.casefold():
+            return str(index), shortcut
+
+    return None
 
 
-def copy_art(
-    grid_dir: Path,
-    app_id: int,
-    service_dir: Path,
-):
-    grid_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
+def build_shortcut(
+    app_name: str,
+    launcher_path: Path,
+) -> dict[str, Any]:
+    executable = normalize_executable(launcher_path)
+    start_directory = normalize_start_directory(launcher_path.parent)
+    appid = calculate_appid(executable, app_name)
 
-    art_mapping = {
-        "grid.png": f"{app_id}p.png",
-        "wide.png": f"{app_id}.png",
-        "hero.png": f"{app_id}_hero.png",
-        "logo.png": f"{app_id}_logo.png",
-        "icon.png": f"{app_id}_icon.png",
+    return {
+        "appid": appid,
+        "appname": app_name,
+        "exe": executable,
+        "StartDir": start_directory,
+        "icon": "",
+        "ShortcutPath": "",
+        "LaunchOptions": "",
+        "IsHidden": 0,
+        "AllowDesktopConfig": 1,
+        "AllowOverlay": 1,
+        "OpenVR": 0,
+        "Devkit": 0,
+        "DevkitGameID": "",
+        "DevkitOverrideAppID": 0,
+        "LastPlayTime": 0,
+        "FlatpakAppID": "",
+        "tags": {
+            "0": "Steam Media Pack",
+        },
     }
 
-    for source_name, destination_name in (
-        art_mapping.items()
-    ):
-        source_file = service_dir / source_name
-        destination_file = (
-            grid_dir / destination_name
+
+def update_shortcut(
+    shortcut: dict[str, Any],
+    app_name: str,
+    launcher_path: Path,
+) -> int:
+    executable = normalize_executable(launcher_path)
+    start_directory = normalize_start_directory(launcher_path.parent)
+    appid = calculate_appid(executable, app_name)
+
+    shortcut["appid"] = appid
+    shortcut["appname"] = app_name
+    shortcut["exe"] = executable
+    shortcut["StartDir"] = start_directory
+    shortcut.setdefault("icon", "")
+    shortcut.setdefault("ShortcutPath", "")
+    shortcut.setdefault("LaunchOptions", "")
+    shortcut.setdefault("IsHidden", 0)
+    shortcut.setdefault("AllowDesktopConfig", 1)
+    shortcut.setdefault("AllowOverlay", 1)
+    shortcut.setdefault("OpenVR", 0)
+    shortcut.setdefault("Devkit", 0)
+    shortcut.setdefault("DevkitGameID", "")
+    shortcut.setdefault("DevkitOverrideAppID", 0)
+    shortcut.setdefault("LastPlayTime", 0)
+    shortcut.setdefault("FlatpakAppID", "")
+
+    tags = shortcut.get("tags")
+
+    if not isinstance(tags, dict):
+        tags = {}
+
+    if "Steam Media Pack" not in tags.values():
+        index = 0
+
+        while str(index) in tags:
+            index += 1
+
+        tags[str(index)] = "Steam Media Pack"
+
+    shortcut["tags"] = tags
+
+    return appid
+
+
+def copy_if_exists(source: Path, destination: Path) -> bool:
+    if not source.is_file():
+        return False
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, destination)
+
+    return True
+
+
+def install_artwork(
+    grid_directory: Path,
+    service_id: str,
+    appid: int,
+) -> int:
+    """
+    Instala artes usando os nomes mais comuns do projeto.
+
+    Arquivos aceitos dentro de steam-art/<serviço>/:
+
+    - grid.png ou portrait.png
+    - hero.png
+    - logo.png
+    - icon.png
+    - grid-wide.png ou capsule.png
+    """
+
+    source_directory = STEAM_ART_DIR / service_id
+
+    if not source_directory.is_dir():
+        warning(
+            f"Diretório de artes não encontrado para "
+            f"{service_id}: {source_directory}"
         )
+        return 0
 
-        if source_file.exists():
-            shutil.copy2(
-                source_file,
-                destination_file,
+    mappings = (
+        (
+            ("grid.png", "portrait.png"),
+            grid_directory / f"{appid}p.png",
+        ),
+        (
+            ("hero.png",),
+            grid_directory / f"{appid}_hero.png",
+        ),
+        (
+            ("logo.png",),
+            grid_directory / f"{appid}_logo.png",
+        ),
+        (
+            ("grid-wide.png", "capsule.png", "wide.png"),
+            grid_directory / f"{appid}.png",
+        ),
+        (
+            ("icon.png",),
+            grid_directory / f"{appid}_icon.png",
+        ),
+    )
+
+    installed = 0
+
+    for source_names, destination in mappings:
+        for source_name in source_names:
+            source = source_directory / source_name
+
+            if copy_if_exists(source, destination):
+                installed += 1
+                break
+
+    return installed
+
+
+def create_backup(shortcuts_path: Path) -> Path | None:
+    if not shortcuts_path.is_file():
+        return None
+
+    backup_path = shortcuts_path.with_name(BACKUP_FILENAME)
+
+    try:
+        shutil.copy2(shortcuts_path, backup_path)
+    except OSError as exc:
+        raise VDFError(
+            f"Não foi possível criar o backup {backup_path}: {exc}"
+        ) from exc
+
+    return backup_path
+
+
+def load_shortcuts_document(
+    shortcuts_path: Path,
+) -> dict[str, Any]:
+    if not shortcuts_path.exists():
+        return {"shortcuts": {}}
+
+    return load_vdf(shortcuts_path)
+
+
+def install_for_user(user_directory: Path) -> tuple[int, int, int]:
+    shortcuts_path = user_directory / SHORTCUTS_RELATIVE_PATH
+    grid_directory = user_directory / GRID_RELATIVE_PATH
+
+    shortcuts_path.parent.mkdir(parents=True, exist_ok=True)
+    grid_directory.mkdir(parents=True, exist_ok=True)
+
+    document = load_shortcuts_document(shortcuts_path)
+    shortcuts = get_shortcuts_container(document)
+
+    backup_path = create_backup(shortcuts_path)
+
+    if backup_path is not None:
+        log(f"Backup criado: {backup_path}")
+
+    created = 0
+    updated = 0
+    artworks = 0
+
+    for service_id, service in SERVICES.items():
+        app_name = service["name"]
+        launcher_filename = service["launcher"]
+        launcher_path = INSTALLED_LAUNCHERS_DIR / launcher_filename
+
+        if not launcher_path.is_file():
+            warning(
+                f"Launcher não encontrado para {app_name}: "
+                f"{launcher_path}"
             )
-
-
-def choose_users(users):
-    if len(users) == 1:
-        return users
-
-    print()
-    print("Usuários Steam encontrados:")
-    print("0) Todos os usuários")
-
-    for index, (_, user_dir) in enumerate(
-        users,
-        start=1,
-    ):
-        print(f"{index}) {user_dir.name}")
-
-    while True:
-        try:
-            choice = int(
-                input("Escolha: ").strip()
-            )
-        except ValueError:
-            print("Escolha inválida.")
             continue
 
-        if choice == 0:
-            return users
+        existing = find_existing_shortcut(shortcuts, app_name)
 
-        if 1 <= choice <= len(users):
-            return [users[choice - 1]]
+        if existing is None:
+            shortcut_index = next_shortcut_index(shortcuts)
+            shortcut = build_shortcut(app_name, launcher_path)
+            shortcuts[shortcut_index] = shortcut
 
-        print("Escolha inválida.")
+            appid = int(shortcut["appid"])
+            created += 1
 
-
-def install_for_user(
-    user_dir: Path,
-    launcher_dir: Path,
-    art_root: Path,
-):
-    config_dir = user_dir / "config"
-
-    shortcuts_file = (
-        config_dir / "shortcuts.vdf"
-    )
-
-    backup_file = (
-        config_dir
-        / "shortcuts.vdf.steam-media-pack.backup"
-    )
-
-    config_dir.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
-    if shortcuts_file.exists():
-        if not backup_file.exists():
-            shutil.copy2(
-                shortcuts_file,
-                backup_file,
+            log(f"Atalho criado: {app_name}")
+        else:
+            _, shortcut = existing
+            appid = update_shortcut(
+                shortcut,
+                app_name,
+                launcher_path,
             )
 
-        root = parse_vdf(
-            shortcuts_file.read_bytes()
+            updated += 1
+            log(f"Atalho atualizado: {app_name}")
+
+        installed_artworks = install_artwork(
+            grid_directory,
+            service_id,
+            appid,
         )
 
-    else:
-        root = OrderedDict(
-            [
-                (
-                    "shortcuts",
-                    (
-                        TYPE_OBJECT,
-                        OrderedDict(),
-                    ),
-                )
-            ]
-        )
+        artworks += installed_artworks
 
-    shortcuts = get_shortcuts(root)
-    existing = existing_shortcuts(shortcuts)
-    shortcut_index = next_index(shortcuts)
-
-    grid_dir = config_dir / "grid"
-
-    added = []
-    updated_art = []
-
-    for service_id, service_data in (
-        SERVICES.items()
-    ):
-        app_name, script_name = service_data
-
-        script_path = (
-            launcher_dir / script_name
-        )
-
-        if not script_path.exists():
-            print(
-                "[AVISO] Launcher não encontrado: "
-                f"{script_path}"
-            )
-            continue
-
-        if app_name in existing:
-            app_id = existing[app_name]["appid"]
-
-            copy_art(
-                grid_dir,
-                app_id,
-                art_root / service_id,
+        if installed_artworks:
+            log(
+                f"{installed_artworks} arte(s) instalada(s) "
+                f"para {app_name}."
             )
 
-            updated_art.append(app_name)
-            continue
+    save_vdf(shortcuts_path, document)
 
-        shortcut_entry, app_id = make_shortcut(
-            app_name,
-            script_path,
-            launcher_dir,
+    return created, updated, artworks
+
+
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Instala os atalhos do Steam Media Pack "
+            "nos perfis Steam."
         )
-
-        shortcuts[str(shortcut_index)] = (
-            TYPE_OBJECT,
-            shortcut_entry,
-        )
-
-        shortcut_index += 1
-
-        copy_art(
-            grid_dir,
-            app_id,
-            art_root / service_id,
-        )
-
-        added.append(app_name)
-        updated_art.append(app_name)
-
-    shortcuts_file.write_bytes(
-        encode_vdf(root)
     )
 
-    print()
-    print(
-        "Usuário Steam:",
-        user_dir.name,
+    parser.add_argument(
+        "--all-users",
+        action="store_true",
+        help="Instala para todos os usuários Steam sem perguntar.",
     )
 
-    print(
-        "Atalhos adicionados:",
-        ", ".join(added)
-        if added
-        else "nenhum",
-    )
-
-    print(
-        "Artes instaladas/atualizadas:",
-        ", ".join(updated_art)
-        if updated_art
-        else "nenhuma",
-    )
-
-    print(
-        "Backup:",
-        backup_file
-        if backup_file.exists()
-        else "não havia arquivo anterior",
-    )
+    return parser.parse_args()
 
 
-def main():
+def main() -> int:
+    args = parse_arguments()
+
     if steam_running():
-        print(
-            "Feche completamente a Steam "
-            "antes de continuar."
+        error(
+            "A Steam está em execução. Feche completamente a Steam "
+            "antes de instalar os atalhos."
         )
-        sys.exit(2)
+        return 1
 
     users = find_userdata()
 
     if not users:
-        print("Nenhum usuário Steam encontrado.")
-        sys.exit(3)
+        error("Nenhum usuário Steam foi encontrado.")
+        return 1
 
-    selected_users = choose_users(users)
+    selected_users = users if args.all_users else choose_users(users)
 
-    project_dir = (
-        Path(__file__).resolve().parent.parent
-    )
+    if not selected_users:
+        error("Nenhum usuário Steam foi selecionado.")
+        return 1
 
-    launcher_dir = (
-        Path.home()
-        / ".local/share/steam-media-pack/launchers"
-    )
+    total_created = 0
+    total_updated = 0
+    total_artworks = 0
+    failures: list[str] = []
 
-    art_root = project_dir / "steam-art"
+    for user_directory in selected_users:
+        print()
+        log(f"Processando usuário Steam: {user_directory.name}")
 
-    if not launcher_dir.exists():
-        print(
-            "Diretório de launchers não encontrado:"
-        )
-        print(launcher_dir)
-        sys.exit(4)
-
-    failures = []
-
-    for _, user_dir in selected_users:
         try:
-            install_for_user(
-                user_dir,
-                launcher_dir,
-                art_root,
+            created, updated, artworks = install_for_user(
+                user_directory
             )
+        except (OSError, VDFError, ValueError) as exc:
+            failures.append(user_directory.name)
+            error(
+                f"Falha ao processar o usuário "
+                f"{user_directory.name}: {exc}"
+            )
+            continue
 
-        except Exception as error:
-            failures.append(
-                (user_dir.name, str(error))
-            )
-
-            print()
-            print(
-                "[ERRO] Falha ao instalar para "
-                f"o usuário {user_dir.name}:"
-            )
-            print(error)
+        total_created += created
+        total_updated += updated
+        total_artworks += artworks
 
     print()
+    print("Resumo da instalação:")
+    print(f"  Atalhos criados: {total_created}")
+    print(f"  Atalhos atualizados: {total_updated}")
+    print(f"  Artes instaladas: {total_artworks}")
 
     if failures:
         print(
-            "A instalação terminou com erros "
-            "em alguns usuários."
+            "  Usuários com falha: "
+            + ", ".join(failures)
         )
+        return 1
 
-        for user_id, error in failures:
-            print(f"- {user_id}: {error}")
-
-        sys.exit(5)
-
-    print(
-        "Instalação concluída para "
-        f"{len(selected_users)} usuário(s) Steam."
-    )
-
-    print("Abra novamente a Steam.")
+    print("  Instalação concluída com sucesso.")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
