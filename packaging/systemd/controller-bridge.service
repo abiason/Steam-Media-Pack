@@ -1,0 +1,14 @@
+[Unit]
+Description=Steam Media Pack Controller Bridge
+After=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/.local/share/steam-media-pack
+ExecStart=%h/.local/share/steam-media-pack/bin/controller-bridge \
+    --config %h/.local/share/steam-media-pack/config/controller.conf
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target

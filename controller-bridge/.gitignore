@@ -1,0 +1,24 @@
+# Build directory
+build/
+
+# Objetos
+*.o
+*.d
+
+# Bibliotecas
+*.a
+*.so
+
+# Binário gerado
+controller-bridge
+
+# Core dumps
+core
+core.*
+
+# Editor
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
