@@ -1,0 +1,15 @@
+[Unit]
+Description=Steam Media Pack Controller Bridge
+Documentation=https://github.com/abiason/Steam-Media-Pack
+After=graphical-session.target
+
+[Service]
+Type=simple
+
+ExecStart=%h/.local/share/steam-media-pack/controller-bridge/controller-bridge
+
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=default.target
